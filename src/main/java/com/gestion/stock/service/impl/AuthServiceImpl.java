@@ -6,8 +6,10 @@ import com.gestion.stock.dto.response.AuthResponseDTO;
 import com.gestion.stock.dto.response.RegisterResponseDTO;
 import com.gestion.stock.entity.User;
 import com.gestion.stock.exception.DuplicateResourceException;
+import com.gestion.stock.exception.RoleNotAssignedException;
 import com.gestion.stock.repository.UserRepository;
 import com.gestion.stock.service.AuthService;
+import com.gestion.stock.service.AuditService;
 import com.gestion.stock.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,7 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
+    @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
@@ -26,6 +28,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final AuditService auditService;
 
     @Override
     @Transactional
@@ -39,7 +42,19 @@ public class AuthServiceImpl implements AuthService {
         );
 
         String username = authentication.getName();
+
+        User user = userRepository.findUserByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getRole() == null) {
+            throw new RoleNotAssignedException(
+                "Your account is pending activation. Please contact an administrator to assign you a role."
+            );
+        }
+
         String token = jwtUtil.generateToken(username);
+
+        auditService.logLogin(username);
 
         return AuthResponseDTO.builder()
                 .message("Login successful")
@@ -52,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public RegisterResponseDTO handleRegister(RegisterRequestDTO registerRequestDTO) {
         
-        if (userRepository.findUserByUsername(registerRequestDTO.getUsername()).isPresent()) {
+        if (userRepository.existsByUsername(registerRequestDTO.getUsername())) {
             throw new DuplicateResourceException("Username already exists: " + registerRequestDTO.getUsername());
         }
 
@@ -64,11 +79,13 @@ public class AuthServiceImpl implements AuthService {
                 .role(null)
                 .build();
 
-        userRepository.save(newUser);
+        User savedUser = userRepository.save(newUser);
+
+        auditService.logAction(savedUser.getUsername(), "REGISTER", "New user registered");
 
         return RegisterResponseDTO.builder()
                 .message("User registered successfully. Please wait for admin to assign your role.")
-                .username(newUser.getUsername())
+                .username(savedUser.getUsername())
                 .build();
     }
 }
