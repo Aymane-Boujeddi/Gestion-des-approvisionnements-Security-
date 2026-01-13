@@ -2,14 +2,11 @@ package com.gestion.stock.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gestion.stock.dto.response.ErrorResponseDTO;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
@@ -35,7 +32,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             HttpServletRequest request,
             HttpServletResponse response,
             AccessDeniedException accessDeniedException
-    ) throws IOException, ServletException {
+    ) throws IOException {
 
 
         // Build standardized error response
@@ -53,7 +50,9 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setCharacterEncoding("UTF-8");
 
         // Write JSON response
-        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+        response.getWriter().write(jsonResponse);
+        response.getWriter().flush();
     }
 }
 

@@ -26,8 +26,12 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpServletRequest request,
             HttpServletResponse response,
             AuthenticationException authException
-    ) throws IOException, ServletException {
+    ) throws IOException {
 
+        // Check if response is already committed
+        if (response.isCommitted()) {
+            return;
+        }
 
         String errorMessage = (String) request.getAttribute("error_message");
         if (errorMessage == null) {
@@ -46,7 +50,9 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+        response.getWriter().write(jsonResponse);
+        response.getWriter().flush();
     }
 }
 
