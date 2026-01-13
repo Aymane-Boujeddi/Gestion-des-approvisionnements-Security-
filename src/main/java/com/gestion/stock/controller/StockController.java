@@ -6,6 +6,7 @@ import com.gestion.stock.dto.response.ProduitResponseDTO;
 import com.gestion.stock.dto.response.StockResponseDTO;
 import com.gestion.stock.entity.MouvementStock;
 import com.gestion.stock.entity.Stock;
+import com.gestion.stock.repository.MouvementStockRepository;
 import com.gestion.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/stock")
@@ -24,6 +26,7 @@ import java.util.Map;
 public class StockController {
 
     private final StockService stockService;
+    private final MouvementStockRepository mouvementStockRepository;
 
 
     @GetMapping
@@ -56,10 +59,10 @@ public class StockController {
         return ResponseEntity.ok(stockService.produitUnderThreshold());
     }
 
-    @GetMapping("/valorisation")
-    @PreAuthorize("hasAuthority('STOCK_READ')")
-    public ResponseEntity<String> valorisationStock(){
-        return ResponseEntity.ok(stockService.valorisationStock());
+/// /////////////////////////////////////////////////////////////////////////
+    @GetMapping("/test")
+    public ResponseEntity<List<Object[]>> test(){
+        return ResponseEntity.ok(mouvementStockRepository.findProductWithCount());
     }
 
 }
