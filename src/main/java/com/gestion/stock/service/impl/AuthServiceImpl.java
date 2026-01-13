@@ -56,10 +56,32 @@ public class AuthServiceImpl implements AuthService {
 
         auditService.logLogin(username);
 
+        // Get role name
+        String roleName = user.getRole().getName().name();
+
+        // Get permissions (combine default role permissions and user-specific permissions)
+        java.util.Set<String> permissionsSet = new java.util.HashSet<>();
+        
+        // Add default role permissions
+        if (user.getRole().getDefaultPermissions() != null) {
+            user.getRole().getDefaultPermissions().forEach(permission -> 
+                permissionsSet.add(permission.getName())
+            );
+        }
+        
+        // Add user-specific permissions
+        if (user.getUserPermissions() != null) {
+            user.getUserPermissions().forEach(userPermission -> 
+                permissionsSet.add(userPermission.getPermission().getName())
+            );
+        }
+
         return AuthResponseDTO.builder()
                 .message("Login successful")
                 .username(username)
                 .token(token)
+                .role(roleName)
+                .permissions(new java.util.ArrayList<>(permissionsSet))
                 .build();
     }
 
@@ -76,6 +98,7 @@ public class AuthServiceImpl implements AuthService {
         User newUser = User.builder()
                 .username(registerRequestDTO.getUsername())
                 .password(encodedPassword)
+                .authProvider("Local")
                 .role(null)
                 .build();
 
