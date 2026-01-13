@@ -35,36 +35,58 @@ databaseChangeLog:
             tableName: users
 
   - changeSet:
-      id : update-users-table-for-oauth-keycloak
-      author : dev-jazz
+      id: update-users-table-for-oauth-keycloak
+      author: dev-jazz
       changes:
+        - dropNotNullConstraint:
+            tableName: users
+            columnName: password
+            columnDataType: VARCHAR(255)
+
         - addColumn:
             tableName: users
             columns:
               - column:
                   name: auth_provider
-                  type: varchar
+                  type: VARCHAR(20)
                   constraints:
                     nullable: false
+                  defaultValue: LOCAL
 
         - addColumn:
             tableName: users
             columns:
               - column:
-                  name: client_id_sub
-                  type: varchar
+                  name: external_subject
+                  type: VARCHAR(255)
                   constraints:
-                    nullable: false
-
+                    nullable: true
+                    unique: true
 
       rollback:
         - dropColumn:
             tableName: users
-            columnName: auth_provider
+            columnName: external_subject
         - dropColumn:
             tableName: users
-            columnName: client_id_sub
+            columnName: auth_provider
         - addNotNullConstraint:
             tableName: users
             columnName: password
-            columnDataType: varchar
+            columnDataType: VARCHAR(255)
+
+  - changeSet:
+      id: rename-external-subject-to-client-id-sub
+      author: dev-jazz
+      changes:
+        - renameColumn:
+            tableName: users
+            oldColumnName: external_subject
+            newColumnName: client_id_sub
+            columnDataType: VARCHAR(255)
+      rollback:
+        - renameColumn:
+            tableName: users
+            oldColumnName: client_id_sub
+            newColumnName: external_subject
+            columnDataType: VARCHAR(255)

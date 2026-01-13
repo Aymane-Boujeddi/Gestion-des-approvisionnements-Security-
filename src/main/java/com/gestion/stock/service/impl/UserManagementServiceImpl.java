@@ -2,6 +2,7 @@ package com.gestion.stock.service.impl;
 
 import com.gestion.stock.dto.request.AssignRoleRequestDTO;
 import com.gestion.stock.dto.request.ModifyPermissionRequestDTO;
+import com.gestion.stock.dto.response.PermissionModificationResponseDTO;
 import com.gestion.stock.dto.response.RoleAssignmentResponseDTO;
 import com.gestion.stock.dto.response.UserPermissionsResponseDTO;
 import com.gestion.stock.entity.Permission;
@@ -92,7 +93,7 @@ public class UserManagementServiceImpl implements UserManagementService {
    
     @Override
     @Transactional
-    public String modifyUserPermission(ModifyPermissionRequestDTO request) {
+    public PermissionModificationResponseDTO modifyUserPermission(ModifyPermissionRequestDTO request) {
         // Find user
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getUserId()));
@@ -130,8 +131,41 @@ public class UserManagementServiceImpl implements UserManagementService {
             request.getGranted()
         );
 
+        // Calculate effective permissions after modification
+        Set<String> effectivePermissions = new HashSet<>();
+
+        // Add role default permissions
+        if (user.getRole() != null && user.getRole().getDefaultPermissions() != null) {
+            for (Permission perm : user.getRole().getDefaultPermissions()) {
+                effectivePermissions.add(perm.getName());
+            }
+        }
+
+        // Apply user-specific overrides
+        if (user.getUserPermissions() != null) {
+            for (UserPermission up : user.getUserPermissions()) {
+                if (up.getPermission() == null) continue;
+
+                String permName = up.getPermission().getName();
+                if (up.isGranted()) {
+                    effectivePermissions.add(permName);
+                } else {
+                    effectivePermissions.remove(permName);
+                }
+            }
+        }
+
         String action = request.getGranted() ? "granted to" : "removed from";
-        return "Permission " + request.getPermissionName() + " " + action + " user " + user.getUsername();
+        String message = "Permission " + request.getPermissionName() + " " + action + " user " + user.getUsername();
+
+        return PermissionModificationResponseDTO.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .permissionName(request.getPermissionName())
+                .granted(request.getGranted())
+                .effectivePermissions(new ArrayList<>(effectivePermissions))
+                .message(message)
+                .build();
     }
 
     /**

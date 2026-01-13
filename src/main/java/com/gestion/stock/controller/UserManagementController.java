@@ -2,6 +2,7 @@ package com.gestion.stock.controller;
 
 import com.gestion.stock.dto.request.AssignRoleRequestDTO;
 import com.gestion.stock.dto.request.ModifyPermissionRequestDTO;
+import com.gestion.stock.dto.response.PermissionModificationResponseDTO;
 import com.gestion.stock.dto.response.RoleAssignmentResponseDTO;
 import com.gestion.stock.dto.response.UserPermissionsResponseDTO;
 import com.gestion.stock.service.UserManagementService;
@@ -32,9 +33,9 @@ public class UserManagementController {
 
     @PostMapping("/modify-permission")
     @PreAuthorize("hasAuthority('PERMISSION_MANAGE')")
-    public ResponseEntity<String> modifyPermission(@Valid @RequestBody ModifyPermissionRequestDTO request) {
-        String message = userManagementService.modifyUserPermission(request);
-        return ResponseEntity.ok(message);
+    public ResponseEntity<PermissionModificationResponseDTO> modifyPermission(@Valid @RequestBody ModifyPermissionRequestDTO request) {
+        PermissionModificationResponseDTO response = userManagementService.modifyUserPermission(request);
+        return ResponseEntity.ok(response);
     }
 
 
