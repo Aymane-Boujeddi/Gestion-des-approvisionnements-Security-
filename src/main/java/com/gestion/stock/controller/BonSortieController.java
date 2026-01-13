@@ -6,8 +6,10 @@ import com.gestion.stock.dto.response.CommandeResponseDTO;
 import com.gestion.stock.service.BonSortieService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +20,6 @@ import java.util.Map;
 @RequestMapping("/bonsSortie")
 @RequiredArgsConstructor
 public class BonSortieController {
-
     private final BonSortieService bonSortieService;
 
     @PostMapping
