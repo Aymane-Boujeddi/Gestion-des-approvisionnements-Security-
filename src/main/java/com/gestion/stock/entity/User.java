@@ -35,7 +35,7 @@ public class User {
     @JoinColumn(name = "role_id")
     private RoleApp role;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<UserPermission> userPermissions = new ArrayList<>();
 

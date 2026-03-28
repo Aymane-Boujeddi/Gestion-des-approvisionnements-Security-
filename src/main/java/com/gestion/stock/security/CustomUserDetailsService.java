@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,17 +28,18 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final RoleAppRepository roleAppRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        
         List<GrantedAuthority> authorities = new ArrayList<>();
+        
         if (user.getRole() != null) {
-
-        List<Permission> effectivePermissions = getEffectivePermissions(user);
-
-        authorities = effectivePermissions.stream()
-                .map(permission -> new SimpleGrantedAuthority(permission.getName()))
-                .collect(Collectors.toList());
+            List<Permission> effectivePermissions = getEffectivePermissions(user);
+            authorities = effectivePermissions.stream()
+                    .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+                    .collect(Collectors.toList());
         }
 
         return new CustomUserDetails(user, authorities);

@@ -53,4 +53,6 @@ public class UserManagementController {
         List<UserPermissionsResponseDTO> users = userManagementService.getAllUsers();
         return ResponseEntity.ok(users);
     }
+
+
 }
